@@ -31,9 +31,8 @@ const art = ` _            _
 
 func TestVersionText(t *testing.T) {
 	sut := GetVersionInfo(
-		WithAppDetails("test", "a test description"),
 		WithASCIIName(art),
-		WithURL("https://carlosbecker.com"),
+		WithAppDetails("test", "a test description", "https://carlosbecker.com"),
 		WithBuiltBy("nixpkgs"),
 	)
 	t.Log("\n" + sut.String())

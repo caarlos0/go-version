@@ -117,16 +117,10 @@ func firstNonEmpty(ss ...string) string {
 type Option func(i *Info)
 
 // WithAppDetails allows to set the app name and description.
-func WithAppDetails(name, description string) Option {
+func WithAppDetails(name, description, url string) Option {
 	return func(i *Info) {
 		i.Name = name
 		i.Description = description
-	}
-}
-
-// WithURL allows to set the app URL to be displayed in the version text.
-func WithURL(url string) Option {
-	return func(i *Info) {
 		i.URL = url
 	}
 }
@@ -144,6 +138,8 @@ func WithBuiltBy(name string) Option {
 		i.BuiltBy = name
 	}
 }
+
+// TODO: write more WithXXX functions?
 
 // GetVersionInfo represents known information on how this binary was built.
 func GetVersionInfo(options ...Option) Info {
