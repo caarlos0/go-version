@@ -162,7 +162,7 @@ func GetVersionInfo(options ...Option) Info {
 }
 
 // String returns the string representation of the version info
-func (i *Info) String() string {
+func (i Info) String() string {
 	b := strings.Builder{}
 	w := tabwriter.NewWriter(&b, 0, 0, 2, ' ', 0)
 
