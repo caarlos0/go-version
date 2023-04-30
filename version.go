@@ -19,55 +19,31 @@ package goversion
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"runtime"
 	"runtime/debug"
 	"strings"
 	"text/tabwriter"
 	"time"
-
-	"github.com/common-nighthawk/go-figure"
 )
 
 const unknown = "unknown"
 
-// Base version information.
-//
-// This is the fallback data used when version information from git is not
-// provided via go ldflags.
-var (
-	// Output of "git describe". The prerequisite is that the
-	// branch should be tagged using the correct versioning strategy.
-	gitVersion = "devel"
-	// SHA1 from git, output of $(git rev-parse HEAD)
-	gitCommit = unknown
-	// State of git tree, either "clean" or "dirty"
-	gitTreeState = unknown
-	// Build date in ISO8601 format, output of $(date -u +'%Y-%m-%dT%H:%M:%SZ')
-	buildDate = unknown
-	// flag to print the ascii name banner
-	asciiName = "true"
-	// goVersion is the used golang version.
-	goVersion = unknown
-	// compiler is the used golang compiler.
-	compiler = unknown
-	// platform is the used os/arch identifier.
-	platform = unknown
-)
-
+// Info provides the version info.
 type Info struct {
 	GitVersion   string `json:"gitVersion"`
+	ModuleSum    string `json:"moduleCheksum"`
 	GitCommit    string `json:"gitCommit"`
 	GitTreeState string `json:"gitTreeState"`
 	BuildDate    string `json:"buildDate"`
+	BuiltBy      string `json:"builtBy"`
 	GoVersion    string `json:"goVersion"`
 	Compiler     string `json:"compiler"`
 	Platform     string `json:"platform"`
 
 	ASCIIName   string `json:"-"`
-	FontName    string `json:"-"`
 	Name        string `json:"-"`
 	Description string `json:"-"`
+	URL         string `json:"-"`
 }
 
 func getBuildInfo() *debug.BuildInfo {
@@ -85,7 +61,7 @@ func getGitVersion(bi *debug.BuildInfo) string {
 
 	// TODO: remove this when the issue https://github.com/golang/go/issues/29228 is fixed
 	if bi.Main.Version == "(devel)" || bi.Main.Version == "" {
-		return gitVersion
+		return ""
 	}
 
 	return bi.Main.Version
@@ -127,44 +103,57 @@ func getKey(bi *debug.BuildInfo, key string) string {
 	return unknown
 }
 
+func firstNonEmpty(ss ...string) string {
+	for _, s := range ss {
+		if s != "" {
+			return s
+		}
+	}
+	return ""
+}
+
+// Option can be used to customize the version after its gathered from the
+// environment.
+type Option func(i *Info)
+
+func WithAppDetails(name, description string) Option {
+	return func(i *Info) {
+		i.Name = name
+		i.Description = description
+	}
+}
+
+func WithURL(url string) Option {
+	return func(i *Info) {
+		i.URL = url
+	}
+}
+
+// WithASCIIName allows you to add an ASCII art of the name.
+func WithASCIIName(name string) Option {
+	return func(i *Info) {
+		i.ASCIIName = name
+	}
+}
+
 // GetVersionInfo represents known information on how this binary was built.
-func GetVersionInfo() Info {
+func GetVersionInfo(options ...Option) Info {
 	buildInfo := getBuildInfo()
-	gitVersion = getGitVersion(buildInfo)
-	if gitCommit == unknown {
-		gitCommit = getCommit(buildInfo)
+	i := Info{
+		GitVersion:   firstNonEmpty(getGitVersion(buildInfo), unknown),
+		ModuleSum:    firstNonEmpty(buildInfo.Main.Sum, unknown),
+		GitCommit:    firstNonEmpty(getCommit(buildInfo), unknown),
+		GitTreeState: firstNonEmpty(getDirty(buildInfo), unknown),
+		BuildDate:    firstNonEmpty(getBuildDate(buildInfo), unknown),
+		BuiltBy:      unknown,
+		GoVersion:    runtime.Version(),
+		Compiler:     runtime.Compiler,
+		Platform:     fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 	}
-
-	if gitTreeState == unknown {
-		gitTreeState = getDirty(buildInfo)
+	for _, opt := range options {
+		opt(&i)
 	}
-
-	if buildDate == unknown {
-		buildDate = getBuildDate(buildInfo)
-	}
-
-	if goVersion == unknown {
-		goVersion = runtime.Version()
-	}
-
-	if compiler == unknown {
-		compiler = runtime.Compiler
-	}
-
-	if platform == unknown {
-		platform = fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
-	}
-
-	return Info{
-		ASCIIName:    asciiName,
-		GitVersion:   gitVersion,
-		GitCommit:    gitCommit,
-		GitTreeState: gitTreeState,
-		BuildDate:    buildDate,
-		GoVersion:    goVersion,
-		Compiler:     compiler,
-		Platform:     platform,
-	}
+	return i
 }
 
 // String returns the string representation of the version info
@@ -174,13 +163,15 @@ func (i *Info) String() string {
 
 	// name and description are optional.
 	if i.Name != "" {
-		if i.ASCIIName == "true" {
-			f := figure.NewFigure(strings.ToUpper(i.Name), i.FontName, true)
-			_, _ = fmt.Fprint(w, f.String())
+		if i.ASCIIName != "" {
+			_, _ = fmt.Fprint(w, i.ASCIIName)
 		}
 		_, _ = fmt.Fprint(w, i.Name)
 		if i.Description != "" {
 			_, _ = fmt.Fprintf(w, ": %s", i.Description)
+		}
+		if i.URL != "" {
+			_, _ = fmt.Fprintf(w, "\n%s", i.URL)
 		}
 		_, _ = fmt.Fprint(w, "\n\n")
 	}
@@ -189,8 +180,10 @@ func (i *Info) String() string {
 	_, _ = fmt.Fprintf(w, "GitCommit:\t%s\n", i.GitCommit)
 	_, _ = fmt.Fprintf(w, "GitTreeState:\t%s\n", i.GitTreeState)
 	_, _ = fmt.Fprintf(w, "BuildDate:\t%s\n", i.BuildDate)
+	_, _ = fmt.Fprintf(w, "BuiltBy:\t%s\n", i.BuiltBy)
 	_, _ = fmt.Fprintf(w, "GoVersion:\t%s\n", i.GoVersion)
 	_, _ = fmt.Fprintf(w, "Compiler:\t%s\n", i.Compiler)
+	_, _ = fmt.Fprintf(w, "ModuleSum:\t%s\n", i.ModuleSum)
 	_, _ = fmt.Fprintf(w, "Platform:\t%s\n", i.Platform)
 
 	_ = w.Flush()
@@ -205,17 +198,4 @@ func (i *Info) JSONString() (string, error) {
 	}
 
 	return string(b), nil
-}
-
-func (i *Info) CheckFontName(fontName string) bool {
-	assetNames := figure.AssetNames()
-
-	for _, font := range assetNames {
-		if strings.Contains(font, fontName) {
-			return true
-		}
-	}
-
-	fmt.Fprintln(os.Stderr, "font not valid, using default")
-	return false
 }

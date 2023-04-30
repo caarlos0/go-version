@@ -16,21 +16,32 @@ limitations under the License.
 
 package goversion
 
-import (
-	"testing"
+import "testing"
 
-	"github.com/stretchr/testify/require"
-)
+const art = ` _            _
+| |_ ___  ___| |_
+| __/ _ \/ __| __|
+| ||  __/\__ \ |_
+ \__\___||___/\__|
+`
 
 func TestVersionText(t *testing.T) {
-	sut := GetVersionInfo()
-	require.NotEmpty(t, sut.String())
+	sut := GetVersionInfo(WithAppDetails("test", "a test description"), WithASCIIName(art))
+	t.Log("\n" + sut.String())
+	if sut.String() == "" {
+		t.Fatal("should not be empty")
+	}
 }
 
 func TestVersionJSON(t *testing.T) {
 	sut := GetVersionInfo()
 	json, err := sut.JSONString()
+	if err != nil {
+		t.Fatal("expected no error, got", err)
+	}
 
-	require.Nil(t, err)
-	require.NotEmpty(t, json)
+	if string(json) == "" {
+		t.Fatal("should not be empty")
+	}
+	t.Log("\n" + string(json))
 }
