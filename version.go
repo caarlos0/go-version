@@ -100,7 +100,7 @@ func getKey(bi *debug.BuildInfo, key string) string {
 			return iter.Value
 		}
 	}
-	return unknown
+	return ""
 }
 
 func firstNonEmpty(ss ...string) string {
@@ -149,7 +149,7 @@ func WithBuiltBy(name string) Option {
 func GetVersionInfo(options ...Option) Info {
 	buildInfo := getBuildInfo()
 	i := Info{
-		GitVersion:   firstNonEmpty(getGitVersion(buildInfo), unknown),
+		GitVersion:   firstNonEmpty(getGitVersion(buildInfo), "devel"),
 		ModuleSum:    firstNonEmpty(buildInfo.Main.Sum, unknown),
 		GitCommit:    firstNonEmpty(getCommit(buildInfo), unknown),
 		GitTreeState: firstNonEmpty(getDirty(buildInfo), unknown),
