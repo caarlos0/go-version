@@ -23,3 +23,5 @@ Full list of changes from the original library:
 - added more fields:
 	- `URL`
 	- `BuiltBy`
+- testing
+	- added more tests, hopefully preventing breaking changes in the future
