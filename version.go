@@ -56,7 +56,7 @@ func getBuildInfo() *debug.BuildInfo {
 
 func getGitVersion(bi *debug.BuildInfo) string {
 	if bi == nil {
-		return unknown
+		return ""
 	}
 
 	// TODO: remove this when the issue https://github.com/golang/go/issues/29228 is fixed
@@ -79,21 +79,21 @@ func getDirty(bi *debug.BuildInfo) string {
 	if modified == "false" {
 		return "clean"
 	}
-	return unknown
+	return ""
 }
 
 func getBuildDate(bi *debug.BuildInfo) string {
 	buildTime := getKey(bi, "vcs.time")
 	t, err := time.Parse("2006-01-02T15:04:05Z", buildTime)
 	if err != nil {
-		return unknown
+		return ""
 	}
 	return t.Format("2006-01-02T15:04:05")
 }
 
 func getKey(bi *debug.BuildInfo, key string) string {
 	if bi == nil {
-		return unknown
+		return ""
 	}
 	for _, iter := range bi.Settings {
 		if iter.Key == key {
@@ -116,6 +116,7 @@ func firstNonEmpty(ss ...string) string {
 // environment.
 type Option func(i *Info)
 
+// WithAppDetails allows to set the app name and description.
 func WithAppDetails(name, description string) Option {
 	return func(i *Info) {
 		i.Name = name
@@ -123,6 +124,7 @@ func WithAppDetails(name, description string) Option {
 	}
 }
 
+// WithURL allows to set the app URL to be displayed in the version text.
 func WithURL(url string) Option {
 	return func(i *Info) {
 		i.URL = url
@@ -133,6 +135,13 @@ func WithURL(url string) Option {
 func WithASCIIName(name string) Option {
 	return func(i *Info) {
 		i.ASCIIName = name
+	}
+}
+
+// WithBuiltBy allows to set the builder name/builder system name.
+func WithBuiltBy(name string) Option {
+	return func(i *Info) {
+		i.BuiltBy = name
 	}
 }
 
