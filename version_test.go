@@ -172,17 +172,3 @@ func TestGetKey(t *testing.T) {
 		}
 	})
 }
-
-func TestFirstNonEmpty(t *testing.T) {
-	t.Run("normal", func(t *testing.T) {
-		expect := "aaa"
-		if got := firstNonEmpty("", "", expect, ""); got != expect {
-			t.Fatalf("expected %q, got %q", expect, got)
-		}
-	})
-	t.Run("all empty", func(t *testing.T) {
-		if got := firstNonEmpty("", "", ""); got != "" {
-			t.Fatalf("expected an empty string, got %q", got)
-		}
-	})
-}

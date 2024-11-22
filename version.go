@@ -17,6 +17,7 @@ limitations under the License.
 package goversion
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"runtime"
@@ -103,15 +104,6 @@ func getKey(bi *debug.BuildInfo, key string) string {
 	return ""
 }
 
-func firstNonEmpty(ss ...string) string {
-	for _, s := range ss {
-		if s != "" {
-			return s
-		}
-	}
-	return ""
-}
-
 // Option can be used to customize the version after its gathered from the
 // environment.
 type Option func(i *Info)
@@ -145,11 +137,11 @@ func WithBuiltBy(name string) Option {
 func GetVersionInfo(options ...Option) Info {
 	buildInfo := getBuildInfo()
 	i := Info{
-		GitVersion:   firstNonEmpty(getGitVersion(buildInfo), "devel"),
-		ModuleSum:    firstNonEmpty(buildInfo.Main.Sum, unknown),
-		GitCommit:    firstNonEmpty(getCommit(buildInfo), unknown),
-		GitTreeState: firstNonEmpty(getDirty(buildInfo), unknown),
-		BuildDate:    firstNonEmpty(getBuildDate(buildInfo), unknown),
+		GitVersion:   cmp.Or(getGitVersion(buildInfo), "devel"),
+		ModuleSum:    cmp.Or(buildInfo.Main.Sum, unknown),
+		GitCommit:    cmp.Or(getCommit(buildInfo), unknown),
+		GitTreeState: cmp.Or(getDirty(buildInfo), unknown),
+		BuildDate:    cmp.Or(getBuildDate(buildInfo), unknown),
 		BuiltBy:      unknown,
 		GoVersion:    runtime.Version(),
 		Compiler:     runtime.Compiler,
