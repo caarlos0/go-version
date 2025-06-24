@@ -32,7 +32,7 @@ const unknown = "unknown"
 // Info provides the version info.
 type Info struct {
 	GitVersion   string `json:"gitVersion"`
-	ModuleSum    string `json:"moduleCheksum"`
+	ModuleSum    string `json:"moduleChecksum"`
 	GitCommit    string `json:"gitCommit"`
 	GitTreeState string `json:"gitTreeState"`
 	BuildDate    string `json:"buildDate"`
