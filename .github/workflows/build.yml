@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go-version }}
       - run: go test -v -failfast -race -coverpkg=./... -covermode=atomic -coverprofile=coverage.txt ./...
