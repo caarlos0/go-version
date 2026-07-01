@@ -18,14 +18,14 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go-version }}
       - run: go test -v -failfast -race -coverpkg=./... -covermode=atomic -coverprofile=coverage.txt ./...
-      - uses: codecov/codecov-action@v6
+      - uses: codecov/codecov-action@v7
         if: matrix.os == 'ubuntu-latest' && matrix.go-version == 'stable'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
